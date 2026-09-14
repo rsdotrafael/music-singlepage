@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gerador de Acordes Musicais</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: system-ui, sans-serif;
+            background: #f4f1ea;
+            color: #25231f;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+        }
+
+        main {
+            width: min(42rem, calc(100% - 2rem));
+            box-sizing: border-box;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            background: #fff;
+            box-shadow: 0 1rem 3rem rgb(49 43 31 / 12%);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        form {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .abas-modo {
+            display: flex;
+            gap: 0.35rem;
+            margin-top: 1.5rem;
+            border-bottom: 1px solid #d8d2c7;
+        }
+
+        .aba-modo {
+            min-height: 2.75rem;
+            margin-bottom: -1px;
+            border-color: transparent;
+            border-bottom-color: #d8d2c7;
+            border-radius: 0.65rem 0.65rem 0 0;
+            background: transparent;
+            color: #575145;
+        }
+
+        .aba-modo:hover {
+            background: #f4f1ea;
+        }
+
+        .aba-modo[aria-selected="true"] {
+            border-color: #d8d2c7;
+            border-bottom-color: #fff;
+            background: #fff;
+            color: #263c2d;
+        }
+
+        .aba-modo:focus-visible {
+            outline: 3px solid rgb(38 60 45 / 25%);
+            outline-offset: 2px;
+        }
+
+        .painel-modo {
+            padding-top: 1.25rem;
+        }
+
+        .painel-modo[hidden] {
+            display: none;
+        }
+
+        .formulario-simples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+            gap: 0.75rem;
+            align-items: end;
+        }
+
+        .formulario-simples button {
+            justify-self: start;
+        }
+
+        .construtor-acorde {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+            gap: 0.75rem;
+        }
+
+        .grupo-notas {
+            margin: 0;
+            padding: 0.8rem;
+            border: 1px solid #d8d2c7;
+            border-radius: 0.75rem;
+        }
+
+        .grupo-notas legend {
+            padding: 0 0.35rem;
+            font-weight: 700;
+        }
+
+        .grupo-notas label {
+            display: flex;
+            grid-template-columns: none;
+            gap: 0.45rem;
+            align-items: center;
+            margin: 0.35rem 0;
+            font-weight: 400;
+        }
+
+        form > button {
+            justify-self: start;
+        }
+
+        label {
+            display: grid;
+            gap: 0.4rem;
+            font-weight: 600;
+        }
+
+        select,
+        button {
+            min-height: 2.75rem;
+            padding: 0.6rem 0.9rem;
+            border: 1px solid #817a6b;
+            border-radius: 0.5rem;
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            border-color: #263c2d;
+            background: #263c2d;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        #resultado {
+            min-height: 2rem;
+            margin-top: 2rem;
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            font-weight: 700;
+            line-height: 1.6;
+        }
+
+        .controles-audio {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .configuracoes-som {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border: 1px solid #d8d2c7;
+            border-radius: 0.75rem;
+            background: #faf8f3;
+        }
+
+        .configuracoes-som legend {
+            padding: 0 0.4rem;
+            font-weight: 700;
+        }
+
+        .opcoes-som {
+            display: flex;
+            gap: 1.5rem;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .controle-volume {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        #volume {
+            width: 8rem;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .erro {
+            color: #a12222;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Gerador de Acordes Musicais</h1>
+    <p>Monte o acorde escolhendo a função de cada nota e como deseja ouvi-lo.</p>
+
+    <div class="abas-modo" role="tablist" aria-label="Modo de formação do acorde">
+        <button
+            id="aba-simples"
+            class="aba-modo"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="painel-simples"
+        >Modo Simples</button>
+        <button
+            id="aba-avancado"
+            class="aba-modo"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="painel-avancado"
+            tabindex="-1"
+        >Modo Avançado</button>
+    </div>
+
+    <section
+        id="painel-simples"
+        class="painel-modo"
+        role="tabpanel"
+        aria-labelledby="aba-simples"
+    >
+        <form id="formulario-simples" class="formulario-simples">
+            <label for="fundamental-simples">
+                Fundamental
+                <select id="fundamental-simples" name="tonica">
+                    <option>C</option><option>C#</option><option>Cb</option>
+                    <option>D</option><option>D#</option><option>Db</option>
+                    <option>E</option><option>E#</option><option>Eb</option>
+                    <option>F</option><option>F#</option><option>Fb</option>
+                    <option>G</option><option>G#</option><option>Gb</option>
+                    <option>A</option><option>A#</option><option>Ab</option>
+                    <option>B</option><option>B#</option><option>Bb</option>
+                </select>
+            </label>
+            <label for="tipo-acorde-simples">
+                Tipo de acorde
+                <select id="tipo-acorde-simples" name="tipo">
+                    <option value="maior">Maior</option>
+                    <option value="menor">Menor (m)</option>
+                    <option value="diminuto">Diminuto (dim)</option>
+                    <option value="aumentado">Aumentado (aug)</option>
+                    <option value="sus2">Suspenso 2 (sus2)</option>
+                    <option value="sus4">Suspenso 4 (sus4)</option>
+                    <option value="sexta">Maior com 6ª (6)</option>
+                    <option value="menor-sexta">Menor com 6ª (m6)</option>
+                    <option value="maior-setima">Maior com 7ª maior (maj7)</option>
+                    <option value="setima">Dominante com 7ª (7)</option>
+                    <option value="menor-setima">Menor com 7ª (m7)</option>
+                    <option value="meio-diminuto">Meio-diminuto (m7♭5)</option>
+                    <option value="diminuto-setima">Diminuto com 7ª (dim7)</option>
+                    <option value="add9">Maior com 9ª adicionada (add9)</option>
+                    <option value="menor-add9">Menor com 9ª adicionada (madd9)</option>
+                    <option value="maior-nona">Maior com 9ª (maj9)</option>
+                    <option value="nona">Dominante com 9ª (9)</option>
+                    <option value="menor-nona">Menor com 9ª (m9)</option>
+                    <option value="setima-nona-menor">Dominante com 9ª menor (7♭9)</option>
+                    <option value="setima-nona-aumentada">Dominante com 9ª aumentada (7♯9)</option>
+                </select>
+            </label>
+            <button type="submit">Gerar acorde</button>
+        </form>
+    </section>
+
+    <section
+        id="painel-avancado"
+        class="painel-modo"
+        role="tabpanel"
+        aria-labelledby="aba-avancado"
+        hidden
+    >
+    <form id="formulario">
+        <label for="tonica">
+            Fundamental
+            <select id="tonica" name="tonica">
+                <option>C</option>
+                <option>C#</option>
+                <option>Cb</option>
+                <option>D</option>
+                <option>D#</option>
+                <option>Db</option>
+                <option>E</option>
+                <option>E#</option>
+                <option>Eb</option>
+                <option>F</option>
+                <option>F#</option>
+                <option>Fb</option>
+                <option>G</option>
+                <option>G#</option>
+                <option>Gb</option>
+                <option>A</option>
+                <option>A#</option>
+                <option>Ab</option>
+                <option>B</option>
+                <option>B#</option>
+                <option>Bb</option>
+            </select>
+        </label>
+        <div class="construtor-acorde">
+            <fieldset class="grupo-notas">
+                <legend>Terça / suspensão</legend>
+                <label><input type="radio" name="terca" value="maior" checked> Maior (3)</label>
+                <label><input type="radio" name="terca" value="menor"> Menor (b3)</label>
+                <label><input type="radio" name="terca" value="sus2"> Suspensa 2 (sus2)</label>
+                <label><input type="radio" name="terca" value="sus4"> Suspensa 4 (sus4)</label>
+                <label><input type="radio" name="terca" value="omitida"> Não incluir</label>
+            </fieldset>
+
+            <fieldset class="grupo-notas">
+                <legend>Quinta</legend>
+                <label><input type="radio" name="quinta" value="diminuta"> Diminuta (b5)</label>
+                <label><input type="radio" name="quinta" value="justa" checked> Justa (5)</label>
+                <label><input type="radio" name="quinta" value="aumentada"> Aumentada (#5)</label>
+                <label><input type="radio" name="quinta" value="omitida"> Não incluir</label>
+            </fieldset>
+
+            <fieldset class="grupo-notas">
+                <legend>Sexta / décima terceira</legend>
+                <label><input type="radio" name="sexta" value="omitida" checked> Não incluir</label>
+                <label><input type="radio" name="sexta" value="menor"> Sexta menor (b6)</label>
+                <label><input type="radio" name="sexta" value="maior"> Sexta maior (6)</label>
+                <label><input type="radio" name="sexta" value="b13"> Décima terceira menor (b13)</label>
+                <label><input type="radio" name="sexta" value="13"> Décima terceira maior (13)</label>
+            </fieldset>
+
+            <fieldset class="grupo-notas">
+                <legend>Sétima</legend>
+                <label><input type="radio" name="setima" value="omitida" checked> Não incluir</label>
+                <label><input type="radio" name="setima" value="diminuta"> Diminuta (bb7)</label>
+                <label><input type="radio" name="setima" value="menor"> Menor (b7)</label>
+                <label><input type="radio" name="setima" value="maior"> Maior (7M)</label>
+            </fieldset>
+
+            <fieldset class="grupo-notas">
+                <legend>Nona</legend>
+                <label><input type="radio" name="nona" value="omitida" checked> Não incluir</label>
+                <label><input type="radio" name="nona" value="menor"> Menor (b9)</label>
+                <label><input type="radio" name="nona" value="maior"> Maior (9)</label>
+                <label><input type="radio" name="nona" value="aumentada"> Aumentada (#9)</label>
+            </fieldset>
+
+            <fieldset class="grupo-notas">
+                <legend>Décima primeira</legend>
+                <label><input type="radio" name="decimaPrimeira" value="omitida" checked> Não incluir</label>
+                <label><input type="radio" name="decimaPrimeira" value="justa"> Justa (11)</label>
+                <label><input type="radio" name="decimaPrimeira" value="aumentada"> Aumentada (#11)</label>
+            </fieldset>
+
+            <fieldset class="grupo-notas">
+                <legend>Fundamental / inversão</legend>
+                <label><input type="radio" name="baixo" value="fundamental" checked> Fundamental no baixo</label>
+                <label><input type="radio" name="baixo" value="terca"> Terça ou suspensão</label>
+                <label><input type="radio" name="baixo" value="quinta"> Quinta</label>
+                <label><input type="radio" name="baixo" value="sexta"> Sexta ou 13ª</label>
+                <label><input type="radio" name="baixo" value="setima"> Sétima</label>
+                <label><input type="radio" name="baixo" value="nona"> Nona</label>
+                <label><input type="radio" name="baixo" value="decima-primeira"> Décima primeira</label>
+            </fieldset>
+        </div>
+        <button type="submit">Gerar acorde</button>
+    </form>
+    </section>
+
+    <div id="resultado" role="status" aria-live="polite"></div>
+
+    <fieldset class="configuracoes-som">
+        <legend>Som</legend>
+        <div class="opcoes-som">
+            <label for="timbre">
+                Timbre
+                <select id="timbre" name="timbre">
+                    <option value="piano">Piano</option>
+                    <option value="violino">Violino</option>
+                </select>
+            </label>
+            <label for="modo-reproducao">
+                Reprodução
+                <select id="modo-reproducao" name="modoReproducao">
+                    <option value="sequencial">Notas sequenciais</option>
+                    <option value="simultaneo">Notas simultâneas</option>
+                </select>
+            </label>
+            <label class="controle-volume" for="volume">
+                Volume
+                <input
+                    id="volume"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="70"
+                    step="1"
+                >
+                <output id="valor-volume" for="volume">70%</output>
+            </label>
+        </div>
+    </fieldset>
+
+    <div class="controles-audio" aria-label="Controles de reprodução">
+        <button id="ouvir" type="button" disabled>Ouvir acorde</button>
+        <button id="parar" type="button" disabled>Parar</button>
+    </div>
+</main>
+
+<script src="./acordes.js"></script>
+<script>
+    class ReprodutorMusical {
+        #contexto;
+        #ganhoMestre;
+        #volume = 0.7;
+        #fontesAtivas = [];
+
+        async iniciarContexto() {
+            if (!this.#contexto) {
+                this.#contexto = new AudioContext();
+                this.#ganhoMestre = this.#contexto.createGain();
+                this.#ganhoMestre.gain.value = this.#volume;
+                this.#ganhoMestre.connect(this.#contexto.destination);
+            }
+
+            if (this.#contexto.state === 'suspended') {
+                await this.#contexto.resume();
+            }
+        }
+
+        definirVolume(volume) {
+            this.#volume = Math.min(1, Math.max(0, volume));
+
+            if (this.#ganhoMestre) {
+                this.#ganhoMestre.gain.setTargetAtTime(
+                    this.#volume,
+                    this.#contexto.currentTime,
+                    0.01
+                );
+            }
+        }
+
+        async reproduzirSequencia(notas, timbre, duracaoNota = 0.65) {
+            await this.iniciarContexto();
+            this.parar();
+
+            const inicio = this.#contexto.currentTime;
+
+            notas.forEach((nota, indice) => {
+                const instante = inicio + indice * duracaoNota;
+                this.#agendarNota(nota.frequencia, instante, duracaoNota * 0.92, timbre);
+            });
+
+            return notas.length * duracaoNota;
+        }
+
+        async reproduzirSimultaneamente(notas, timbre, duracao = 1.5) {
+            await this.iniciarContexto();
+            this.parar();
+
+            const inicio = this.#contexto.currentTime;
+
+            notas.forEach((nota) => {
+                this.#agendarNota(nota.frequencia, inicio, duracao, timbre);
+            });
+
+            return duracao;
+        }
+
+        parar() {
+            this.#fontesAtivas.forEach((fonte) => {
+                try {
+                    fonte.stop();
+                } catch {
+                    // A fonte pode já ter terminado.
+                }
+            });
+
+            this.#fontesAtivas = [];
+        }
+
+        #agendarNota(frequencia, inicio, duracao, timbre = 'piano') {
+            if (timbre === 'violino') {
+                this.#agendarViolino(frequencia, inicio, duracao);
+                return;
+            }
+
+            this.#agendarPiano(frequencia, inicio, duracao);
+        }
+
+        #agendarPiano(frequencia, inicio, duracao) {
+            // Vários parciais e decaimentos diferentes aproximam a riqueza de uma corda percutida.
+            const harmonicos = [
+                { multiplo: 1, ganho: 0.22, decaimento: 1 },
+                { multiplo: 2.01, ganho: 0.10, decaimento: 0.72 },
+                { multiplo: 3.03, ganho: 0.055, decaimento: 0.48 },
+                { multiplo: 4.08, ganho: 0.025, decaimento: 0.34 }
+            ];
+
+            harmonicos.forEach(({ multiplo, ganho, decaimento }) => {
+                const oscilador = this.#contexto.createOscillator();
+                const envelope = this.#contexto.createGain();
+                const fim = inicio + duracao;
+
+                oscilador.type = 'sine';
+                oscilador.frequency.setValueAtTime(frequencia * multiplo, inicio);
+                envelope.gain.setValueAtTime(0.0001, inicio);
+                envelope.gain.exponentialRampToValueAtTime(ganho, inicio + 0.008);
+                envelope.gain.exponentialRampToValueAtTime(
+                    Math.max(0.0001, ganho * 0.12),
+                    inicio + duracao * decaimento
+                );
+                envelope.gain.exponentialRampToValueAtTime(0.0001, fim);
+
+                oscilador.connect(envelope);
+                envelope.connect(this.#ganhoMestre);
+                this.#iniciarFonte(oscilador, envelope, inicio, fim);
+            });
+        }
+
+        #agendarViolino(frequencia, inicio, duracao) {
+            const oscilador = this.#contexto.createOscillator();
+            const vibrato = this.#contexto.createOscillator();
+            const intensidadeVibrato = this.#contexto.createGain();
+            const envelope = this.#contexto.createGain();
+            const fim = inicio + duracao;
+
+            oscilador.type = 'sawtooth';
+            oscilador.frequency.setValueAtTime(frequencia, inicio);
+            vibrato.frequency.setValueAtTime(5.4, inicio);
+            intensidadeVibrato.gain.setValueAtTime(0, inicio);
+            intensidadeVibrato.gain.linearRampToValueAtTime(frequencia * 0.006, inicio + 0.18);
+            envelope.gain.setValueAtTime(0.0001, inicio);
+            envelope.gain.linearRampToValueAtTime(0.075, inicio + 0.09);
+            envelope.gain.setValueAtTime(0.075, Math.max(inicio + 0.09, fim - 0.1));
+            envelope.gain.exponentialRampToValueAtTime(0.0001, fim);
+
+            vibrato.connect(intensidadeVibrato);
+            intensidadeVibrato.connect(oscilador.frequency);
+            oscilador.connect(envelope);
+            envelope.connect(this.#ganhoMestre);
+
+            this.#iniciarFonte(oscilador, envelope, inicio, fim);
+            this.#iniciarFonte(vibrato, intensidadeVibrato, inicio, fim);
+        }
+
+        #iniciarFonte(fonte, noSaida, inicio, fim) {
+            fonte.addEventListener('ended', () => {
+                fonte.disconnect();
+                noSaida.disconnect();
+                this.#fontesAtivas = this.#fontesAtivas.filter(
+                    (fonteAtiva) => fonteAtiva !== fonte
+                );
+            });
+
+            this.#fontesAtivas.push(fonte);
+            fonte.start(inicio);
+            fonte.stop(fim);
+        }
+
+    }
+
+    const formulario = document.querySelector('#formulario');
+    const formularioSimples = document.querySelector('#formulario-simples');
+    const abasModo = [...document.querySelectorAll('[role="tab"]')];
+    const tonica = document.querySelector('#tonica');
+    const resultado = document.querySelector('#resultado');
+    const seletorTimbre = document.querySelector('#timbre');
+    const seletorModoReproducao = document.querySelector('#modo-reproducao');
+    const botaoOuvir = document.querySelector('#ouvir');
+    const botaoParar = document.querySelector('#parar');
+    const controleVolume = document.querySelector('#volume');
+    const valorVolume = document.querySelector('#valor-volume');
+    const reprodutor = new ReprodutorMusical();
+
+    let notasAtuais = [];
+    let temporizadorReproducao;
+
+    const configuracoesSimples = {
+        maior: { terca: 'maior', quinta: 'justa' },
+        menor: { terca: 'menor', quinta: 'justa' },
+        diminuto: { terca: 'menor', quinta: 'diminuta' },
+        aumentado: { terca: 'maior', quinta: 'aumentada' },
+        sus2: { terca: 'sus2', quinta: 'justa' },
+        sus4: { terca: 'sus4', quinta: 'justa' },
+        sexta: { terca: 'maior', quinta: 'justa', sexta: 'maior' },
+        'menor-sexta': { terca: 'menor', quinta: 'justa', sexta: 'maior' },
+        'maior-setima': { terca: 'maior', quinta: 'justa', setima: 'maior' },
+        setima: { terca: 'maior', quinta: 'justa', setima: 'menor' },
+        'menor-setima': { terca: 'menor', quinta: 'justa', setima: 'menor' },
+        'meio-diminuto': { terca: 'menor', quinta: 'diminuta', setima: 'menor' },
+        'diminuto-setima': { terca: 'menor', quinta: 'diminuta', setima: 'diminuta' },
+        add9: { terca: 'maior', quinta: 'justa', nona: 'maior' },
+        'menor-add9': { terca: 'menor', quinta: 'justa', nona: 'maior' },
+        'maior-nona': { terca: 'maior', quinta: 'justa', setima: 'maior', nona: 'maior' },
+        nona: { terca: 'maior', quinta: 'justa', setima: 'menor', nona: 'maior' },
+        'menor-nona': { terca: 'menor', quinta: 'justa', setima: 'menor', nona: 'maior' },
+        'setima-nona-menor': { terca: 'maior', quinta: 'justa', setima: 'menor', nona: 'menor' },
+        'setima-nona-aumentada': { terca: 'maior', quinta: 'justa', setima: 'menor', nona: 'aumentada' }
+    };
+
+    function selecionarAba(abaSelecionada) {
+        abasModo.forEach((aba) => {
+            const selecionada = aba === abaSelecionada;
+            const painel = document.querySelector(`#${aba.getAttribute('aria-controls')}`);
+
+            aba.setAttribute('aria-selected', String(selecionada));
+            aba.tabIndex = selecionada ? 0 : -1;
+            painel.hidden = !selecionada;
+        });
+    }
+
+    abasModo.forEach((aba, indice) => {
+        aba.addEventListener('click', () => selecionarAba(aba));
+        aba.addEventListener('keydown', (evento) => {
+            if (!['ArrowLeft', 'ArrowRight'].includes(evento.key)) {
+                return;
+            }
+
+            evento.preventDefault();
+            const deslocamento = evento.key === 'ArrowRight' ? 1 : -1;
+            const proximoIndice = (indice + deslocamento + abasModo.length) % abasModo.length;
+            selecionarAba(abasModo[proximoIndice]);
+            abasModo[proximoIndice].focus();
+        });
+    });
+
+    function atualizarInversoesDisponiveis() {
+        const componentes = {
+            terca: 'terca',
+            quinta: 'quinta',
+            sexta: 'sexta',
+            setima: 'setima',
+            nona: 'nona',
+            'decima-primeira': 'decimaPrimeira'
+        };
+
+        Object.entries(componentes).forEach(([baixo, grupo]) => {
+            const escolha = formulario.querySelector(`input[name="${grupo}"]:checked`);
+            const inversao = formulario.querySelector(`input[name="baixo"][value="${baixo}"]`);
+            inversao.disabled = escolha.value === 'omitida';
+            if (inversao.disabled && inversao.checked) {
+                formulario.querySelector('input[name="baixo"][value="fundamental"]').checked = true;
+            }
+        });
+    }
+
+    formulario.addEventListener('change', atualizarInversoesDisponiveis);
+    atualizarInversoesDisponiveis();
+
+    controleVolume.addEventListener('input', () => {
+        const percentual = Number(controleVolume.value);
+        valorVolume.value = `${percentual}%`;
+        reprodutor.definirVolume(percentual / 100);
+    });
+
+    function gerarAcorde(parametros) {
+        reprodutor.parar();
+        clearTimeout(temporizadorReproducao);
+
+        notasAtuais = [];
+        botaoOuvir.disabled = true;
+        botaoOuvir.textContent = 'Ouvir acorde';
+        botaoParar.disabled = true;
+        resultado.classList.remove('erro');
+        resultado.textContent = 'Gerando…';
+
+        try {
+            const acorde = Acordes.gerar(parametros);
+            notasAtuais = acorde.notas;
+            resultado.textContent = `${acorde.cifra}: ${notasAtuais
+                .map((nota) => nota.nome)
+                .join(' - ')}`;
+            botaoOuvir.disabled = false;
+        } catch (erro) {
+            resultado.classList.add('erro');
+            resultado.textContent = erro.message;
+        }
+    }
+
+    formulario.addEventListener('submit', (evento) => {
+        evento.preventDefault();
+        gerarAcorde(Object.fromEntries(new FormData(formulario)));
+    });
+
+    formularioSimples.addEventListener('submit', (evento) => {
+        evento.preventDefault();
+        const dados = new FormData(formularioSimples);
+        const tipo = dados.get('tipo');
+        const parametros = {
+            tonica: dados.get('tonica'),
+            ...configuracoesSimples[tipo]
+        };
+        gerarAcorde(parametros);
+    });
+
+    botaoOuvir.addEventListener('click', async () => {
+        if (notasAtuais.length === 0) {
+            return;
+        }
+
+        clearTimeout(temporizadorReproducao);
+        botaoOuvir.disabled = true;
+        botaoOuvir.textContent = 'Tocando…';
+        botaoParar.disabled = false;
+
+        try {
+            const simultaneo = seletorModoReproducao.value === 'simultaneo';
+            const duracao = simultaneo
+                ? await reprodutor.reproduzirSimultaneamente(
+                    notasAtuais,
+                    seletorTimbre.value
+                )
+                : await reprodutor.reproduzirSequencia(
+                    notasAtuais,
+                    seletorTimbre.value
+                );
+
+            temporizadorReproducao = setTimeout(() => {
+                botaoOuvir.disabled = false;
+                botaoOuvir.textContent = 'Ouvir novamente';
+                botaoParar.disabled = true;
+            }, duracao * 1000);
+        } catch {
+            botaoOuvir.disabled = false;
+            botaoOuvir.textContent = 'Ouvir acorde';
+            botaoParar.disabled = true;
+            resultado.classList.add('erro');
+            resultado.textContent = 'Não foi possível reproduzir o acorde.';
+        }
+    });
+
+    botaoParar.addEventListener('click', () => {
+        clearTimeout(temporizadorReproducao);
+        reprodutor.parar();
+        botaoOuvir.disabled = false;
+        botaoOuvir.textContent = 'Ouvir novamente';
+        botaoParar.disabled = true;
+    });
+</script>
+</body>
+</html>

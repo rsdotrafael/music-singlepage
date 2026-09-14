@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Escalas · Oficina Musical</title>
+    <link rel="stylesheet" href="./app.css">
+    <script src="./app.js" defer></script>
+</head>
+<body>
+    <a class="pular-menu" href="#conteudo">Ir para o gerador</a>
+    <aside class="menu-lateral" aria-label="Aplicativos musicais">
+        <div class="marca">
+            <span class="marca-simbolo" aria-hidden="true">♫</span>
+            <div><strong>Oficina Musical</strong><span>Explore. Crie. Ouça.</span></div>
+        </div>
+        <nav aria-label="Menu principal" id="menu-aplicativos">
+            <h2>Geradores</h2>
+            <a class="item-menu" href="#escalas" data-aplicativo="escalas" aria-current="page">
+                <span class="item-simbolo" aria-hidden="true">♮</span>
+                <span>Escalas</span>
+            </a>
+            <a class="item-menu" href="#acordes" data-aplicativo="acordes">
+                <span class="item-simbolo" aria-hidden="true">♬</span>
+                <span>Acordes</span>
+            </a>
+        </nav>
+        <p class="nota-menu">Seu espaço para experimentar música.</p>
+    </aside>
+    <main id="conteudo" tabindex="-1">
+        <header class="barra-aplicativo">
+            <p><span id="categoria-atual">Geradores</span><span class="separador" aria-hidden="true">/</span><strong id="nome-atual">Escalas</strong></p>
+            <a id="abrir-aplicativo" href="./music-scale-generator/index.html" target="_blank" rel="noopener" aria-label="Abrir Escalas em uma nova aba">Abrir em nova aba <span aria-hidden="true">↗</span></a>
+        </header>
+        <iframe id="aplicativo" name="aplicativo" src="./music-scale-generator/index.html" title="Gerador de escalas musicais"></iframe>
+    </main>
+</body>
+</html>
